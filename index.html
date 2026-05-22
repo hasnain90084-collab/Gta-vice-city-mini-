@@ -3,159 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA Vice City - Mini Edition</title>
+    <title>2D Vice City Car Game</title>
     <style>
         body {
-            background-color: #1a001a;
-            color: #00ffcc;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
+            margin: 0;
+            padding: 10px;
+            user-select: none;
         }
         h1 {
+            margin: 5px 0;
             color: #ff007f;
-            text-shadow: 3px 3px #000;
-            font-size: 32px;
+            text-shadow: 2px 2px #000;
         }
-        .game-container {
-            max-width: 600px;
+        #score-board {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+        /* Game Road Area */
+        #gameArea {
+            width: 300px;
+            height: 400px;
+            background-color: #333;
             margin: 0 auto;
-            background: #2d004d;
-            padding: 20px;
+            position: relative;
+            overflow: hidden;
             border: 4px solid #ff007f;
             border-radius: 10px;
-            box-shadow: 0 0 15px #ff007f;
         }
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            font-weight: bold;
-            margin-bottom: 20px;
-            background: #000;
-            padding: 10px;
+        /* Road Lines Styling */
+        .line {
+            width: 10px;
+            height: 50px;
+            background-color: white;
+            position: absolute;
+            left: 145px;
+        }
+        /* Player Car */
+        #playerCar {
+            width: 40px;
+            height: 70px;
+            background-color: #ff007f;
+            position: absolute;
+            bottom: 20px;
+            left: 130px;
             border-radius: 5px;
+            box-shadow: 0 0 8px #ff007f;
         }
-        .log {
-            height: 150px;
-            overflow-y: auto;
-            background: #111;
-            padding: 10px;
+        /* Player Car Windows */
+        #playerCar::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 5px; right: 5px; height: 15px;
+            background-color: #00ffcc;
+            border-radius: 3px;
+        }
+        /* Enemy Car */
+        #enemyCar {
+            width: 40px;
+            height: 70px;
+            background-color: #00ffcc;
+            position: absolute;
+            top: -80px;
+            left: 50px;
             border-radius: 5px;
-            text-align: left;
-            margin-bottom: 20px;
-            color: #fff;
+            box-shadow: 0 0 8px #00ffcc;
         }
-        button {
+        #enemyCar::before {
+            content: '';
+            position: absolute;
+            top: 40px; left: 5px; right: 5px; height: 15px;
+            background-color: #ff007f;
+            border-radius: 3px;
+        }
+        /* Controls for Mobile */
+        .controls {
+            margin-top: 15px;
+        }
+        .btn {
             background-color: #ff007f;
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
+            padding: 15px 35px;
+            font-size: 18px;
             font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
             margin: 5px;
-            transition: 0.2s;
+            border-radius: 8px;
+            cursor: pointer;
         }
-        button:hover {
+        .btn:active {
             background-color: #00ffcc;
-            color: #000;
+            color: black;
+        }
+        #restartBtn {
+            display: none;
+            background-color: #00ffcc;
+            color: black;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px auto;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <h1>GTA VICE CITY</h1>
-    <h3>Mini Retro Text Edition</h3>
+    <h1>VICE CITY DRIVER</h1>
+    <div id="score-board">Score: <span id="score">0</span></div>
 
-    <div class="game-container">
-        <div class="stats">
-            <div>Player: <span id="player-name">Tommy Vercetti</span></div>
-            <div>Cash: $<span id="cash">0</span></div>
-            <div>Wanted Level: <span id="wanted">⭐0</span></div>
-        </div>
+    <div id="gameArea">
+        <div class="line" style="top: 0px;" id="line1"></div>
+        <div class="line" style="top: 100px;" id="line2"></div>
+        <div class="line" style="top: 200px;" id="line3"></div>
+        <div class="line" style="top: 300px;" id="line4"></div>
+        
+        <div id="playerCar"></div>
+        <div id="enemyCar"></div>
+    </div>
 
-        <div class="log" id="game-log">
-            Welcome back to Vice City, Tommy! Choose an action below to start building your empire.
-        </div>
+    <button id="restartBtn" onclick="restartGame()">Restart Game</button>
 
-        <div class="actions">
-            <button onclick="stealCar()">Steal a Car</button>
-            <button onclick="doMission()">Complete a Mission</button>
-            <button onclick="payBribe()">Pay Police Bribe</button>
-        </div>
+    <div class="controls">
+        <button class="btn" id="leftBtn">◀ LEFT</button>
+        <button class="btn" id="rightBtn">RIGHT ▶</button>
     </div>
 
     <script>
-        let cash = 0;
-        let wantedLevel = 0;
-        const logElement = document.getElementById('game-log');
-        const cashElement = document.getElementById('cash');
-        const wantedElement = document.getElementById('wanted');
+        const player = document.getElementById('playerCar');
+        const enemy = document.getElementById('enemyCar');
+        const scoreElement = document.getElementById('score');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        // Lines
+        const l1 = document.getElementById('line1');
+        const l2 = document.getElementById('line2');
+        const l3 = document.getElementById('line3');
+        const l4 = document.getElementById('line4');
 
-        function updateLog(message) {
-            logElement.innerHTML += "<br>> " + message;
-            logElement.scrollTop = logElement.scrollHeight;
-        }
+        let playerX = 130;
+        let enemyX = 50;
+        let enemyY = -80;
+        let score = 0;
+        let speed = 4;
+        let gameOver = false;
+        let gameInterval;
 
-        function stealCar() {
-            if (wantedLevel >= 5) {
-                updateLog("The military is after you! Pay a bribe first!");
-                return;
+        // Move Left/Right
+        document.getElementById('leftBtn').addEventListener('click', () => {
+            if(!gameOver && playerX > 20) { playerX -= 35; player.style.left = playerX + 'px'; }
+        });
+        
+        document.getElementById('rightBtn').addEventListener('click', () => {
+            if(!gameOver && playerX < 240) { playerX += 35; player.style.left = playerX + 'px'; }
+        });
+
+        // Main Game Loop
+        function updateGame() {
+            if (gameOver) return;
+
+            // Move Road Lines
+            moveLine(l1); moveLine(l2); moveLine(l3); moveLine(l4);
+
+            // Move Enemy Car Down
+            enemyY += speed;
+            if (enemyY > 400) {
+                enemyY = -80;
+                // Randomly choose left, middle or right lane
+                const lanes = [40, 130, 220];
+                enemyX = lanes[Math.floor(Math.random() * lanes.length)];
+                enemy.style.left = enemyX + 'px';
+                
+                score += 10;
+                scoreElement.innerText = score;
+                if(score % 50 === 0) speed += 1; // Speed increases
             }
-            
-            let chance = Math.random();
-            if (chance > 0.3) {
-                let earned = Math.floor(Math.random() * 500) + 200;
-                cash += earned;
-                wantedLevel += 1;
-                updateLog(`You stole an Infernus and sold it for $${earned}! (Wanted Level Increased)`);
-            } else {
-                wantedLevel += 2;
-                updateLog("The alarms went off! The cops spotted you!");
-            }
-            updateStats();
-        }
+            enemy.style.top = enemyY + 'px';
 
-        function doMission() {
-            if (wantedLevel >= 4) {
-                updateLog("Too much heat! Cops are everywhere. Clear your wanted level!");
-                return;
-            }
-
-            let earned = Math.floor(Math.random() * 1500) + 500;
-            cash += earned;
-            wantedLevel += 1;
-            updateLog(`Sonny Forelli called. You completed the deal and earned $${earned}!`);
-            updateStats();
-        }
-
-        function payBribe() {
-            if (wantedLevel === 0) {
-                updateLog("Your record is currently clean.");
-                return;
-            }
-            if (cash >= 300) {
-                cash -= 300;
-                wantedLevel = 0;
-                updateLog("You paid off the Vice City PD. Wanted level cleared!");
-            } else {
-                updateLog("You don't have enough cash ($300 required) to bribe the cops!");
-            }
-            updateStats();
-        }
-
-        function updateStats() {
-            cashElement.innerText = cash;
-            wantedElement.innerText = "⭐" + wantedLevel;
-            
-            if (wantedLevel >= 6) {
-                updateLog("<span style='color: red; font-weight: bold;'>WASTED! The FBI caught you. You lost half your money!</span>");
-                cash = Math.floor(cash / 2);
-                wantedLevel = 0;
-                setTimeout(updateStats, 1000);
+            // Check Collision (Accident)
+            if (enemyY + 70 > 310 && enemyY < 380 && enemyX === playerX) {
+                gameOver = true;
+                clearInterval(gameInterval);
+                scoreElement.innerHTML = score + " <span style='color:red;'>- CRASHED! Game Over</span>";
+                restartBtn.style.display = 'block';
             }
         }
+
+        function moveLine(line) {
+            let top = parseInt(line.style.top);
+            if (top >= 400) top = -50;
+            line.style.top = (top + speed) + 'px';
+        }
+
+        function restartGame() {
+            playerX = 130;
+            enemyX = 50;
+            enemyY = -80;
+            score = 0;
+            speed = 4;
+            gameOver = false;
+            player.style.left = playerX + 'px';
+            scoreElement.innerText = score;
+            restartBtn.style.display = 'none';
+            clearInterval(gameInterval);
+            gameInterval = setInterval(updateGame, 20);
+        }
+
+        // Start Game
+        gameInterval = setInterval(updateGame, 20);
     </script>
 
 </body>
