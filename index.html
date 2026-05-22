@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTA Vice City - Mini Edition</title>
+    <style>
+        body {
+            background-color: #1a001a;
+            color: #00ffcc;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #ff007f;
+            text-shadow: 3px 3px #000;
+            font-size: 32px;
+        }
+        .game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #2d004d;
+            padding: 20px;
+            border: 4px solid #ff007f;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ff007f;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .log {
+            height: 150px;
+            overflow-y: auto;
+            background: #111;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        button {
+            background-color: #ff007f;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #00ffcc;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>GTA VICE CITY</h1>
+    <h3>Mini Retro Text Edition</h3>
+
+    <div class="game-container">
+        <div class="stats">
+            <div>Player: <span id="player-name">Tommy Vercetti</span></div>
+            <div>Cash: $<span id="cash">0</span></div>
+            <div>Wanted Level: <span id="wanted">⭐0</span></div>
+        </div>
+
+        <div class="log" id="game-log">
+            Welcome back to Vice City, Tommy! Choose an action below to start building your empire.
+        </div>
+
+        <div class="actions">
+            <button onclick="stealCar()">Steal a Car</button>
+            <button onclick="doMission()">Complete a Mission</button>
+            <button onclick="payBribe()">Pay Police Bribe</button>
+        </div>
+    </div>
+
+    <script>
+        let cash = 0;
+        let wantedLevel = 0;
+        const logElement = document.getElementById('game-log');
+        const cashElement = document.getElementById('cash');
+        const wantedElement = document.getElementById('wanted');
+
+        function updateLog(message) {
+            logElement.innerHTML += "<br>> " + message;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function stealCar() {
+            if (wantedLevel >= 5) {
+                updateLog("The military is after you! Pay a bribe first!");
+                return;
+            }
+            
+            let chance = Math.random();
+            if (chance > 0.3) {
+                let earned = Math.floor(Math.random() * 500) + 200;
+                cash += earned;
+                wantedLevel += 1;
+                updateLog(`You stole an Infernus and sold it for $${earned}! (Wanted Level Increased)`);
+            } else {
+                wantedLevel += 2;
+                updateLog("The alarms went off! The cops spotted you!");
+            }
+            updateStats();
+        }
+
+        function doMission() {
+            if (wantedLevel >= 4) {
+                updateLog("Too much heat! Cops are everywhere. Clear your wanted level!");
+                return;
+            }
+
+            let earned = Math.floor(Math.random() * 1500) + 500;
+            cash += earned;
+            wantedLevel += 1;
+            updateLog(`Sonny Forelli called. You completed the deal and earned $${earned}!`);
+            updateStats();
+        }
+
+        function payBribe() {
+            if (wantedLevel === 0) {
+                updateLog("Your record is currently clean.");
+                return;
+            }
+            if (cash >= 300) {
+                cash -= 300;
+                wantedLevel = 0;
+                updateLog("You paid off the Vice City PD. Wanted level cleared!");
+            } else {
+                updateLog("You don't have enough cash ($300 required) to bribe the cops!");
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            cashElement.innerText = cash;
+            wantedElement.innerText = "⭐" + wantedLevel;
+            
+            if (wantedLevel >= 6) {
+                updateLog("<span style='color: red; font-weight: bold;'>WASTED! The FBI caught you. You lost half your money!</span>");
+                cash = Math.floor(cash / 2);
+                wantedLevel = 0;
+                setTimeout(updateStats, 1000);
+            }
+        }
+    </script>
+
+</body>
+</html>
